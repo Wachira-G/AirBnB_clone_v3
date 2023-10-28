@@ -8,7 +8,8 @@ from models.city import City
 from werkzeug.exceptions import NotFound
 
 
-@app_views.route("/states/<state_id>/cities", methods=["GET"], strict_slashes=False)
+@app_views.route(
+        "/states/<state_id>/cities", methods=["GET"], strict_slashes=False)
 def get_cities(state_id):
     """Retrieve City objects."""
     state = storage.get('State', state_id)
@@ -16,7 +17,8 @@ def get_cities(state_id):
         abort(404)
     cities = storage.all("City")
     json_cities = jsonify(
-        [city.to_dict() for city in cities.values() if city.state_id == state_id])
+        [city.to_dict() for city in cities.values()
+         if city.state_id == state_id])
 
     return json_cities, 200
 
@@ -46,17 +48,19 @@ def delete_a_city(id):
     abort(404)
 
 
-@app_views.route('/states/<state_id>/cities/', methods=['POST'], strict_slashes=False)
+@app_views.route(
+        '/states/<state_id>/cities/', methods=['POST'], strict_slashes=False)
 def post_a_city(state_id):
     """Create a city object."""
     state = storage.get('State', state_id)
     if not state:
         abort(404)
-    
+
     city_info = request.get_json()
     if city_info:
         if not city_info.get('name'):
             abort(400, 'Missing name')
+        city_info.update({"state_id": state_id})
         city = City(**city_info)
         storage.new(city)
         storage.save()
