@@ -36,9 +36,6 @@ def delete_a_state(id):
     """Delete a specific state object."""
     state = storage.get('State', id)
     if state:
-        # delete review
-        # delete place
-        # delete city
         state.delete()
         storage.save()
         return {}, 200
