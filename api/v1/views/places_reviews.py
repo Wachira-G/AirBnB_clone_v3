@@ -8,19 +8,27 @@ from models.review import Review
 from werkzeug.exceptions import NotFound
 
 
-@app_views.route("/reviews", methods=["GET"], strict_slashes=False)
-def get_reviews():
-    """Retrieve Review objects."""
+@app_views.route(
+        "/places/<string:place_id>/reviews",
+        methods=["GET"], strict_slashes=False)
+def get_reviews(place_id):
+    """Retrieve Review objects of a place."""
+    place = storage.get('Place', place_id)
+    if not place:
+        abort(404)
     reviews = storage.all("Review")
-    json_reviews = jsonify([review.to_dict() for review in reviews.values()])
+    json_reviews = jsonify([
+        review.to_dict() for review in reviews.values()
+        if review.place_id == place_id])
 
     return json_reviews, 200
 
 
-@app_views.route("/reviews/<string:id>", methods=["GET"], strict_slashes=False)
-def get_a_review(id):
+@app_views.route(
+        "/reviews/<string:review_id>", methods=["GET"], strict_slashes=False)
+def get_a_review(review_id):
     """Retrieve a specific review object."""
-    review = storage.get('Review', id)
+    review = storage.get('Review', review_id)
     if review:
         json_review = jsonify(review.to_dict())
         return json_review, 200
@@ -28,13 +36,13 @@ def get_a_review(id):
 
 
 @app_views.route(
-        "/reviews/<string:id>",
+        "/reviews/<string:review_id>",
         methods=["DELETE"],
         strict_slashes=False,
         )
-def delete_a_review(id):
+def delete_a_review(review_id):
     """Delete a specific review object."""
-    review = storage.get('Review', id)
+    review = storage.get('Review', review_id)
     if review:
         review.delete()
         storage.save()
@@ -42,13 +50,25 @@ def delete_a_review(id):
     abort(404)
 
 
-@app_views.route('/reviews/', methods=['POST'], strict_slashes=False)
-def post_a_review():
+@app_views.route(
+        '/places/<string:place_id>/reviews/',
+        methods=['POST'], strict_slashes=False
+        )
+def post_a_review(place_id):
     """Create a review object."""
+    place = storage.get("Place", place_id)
+    if not place:
+        abort(404)
     review_info = request.get_json()
     if review_info:
-        if not review_info.get('name'):
-            abort(400, 'Missing name')
+        user_id = review_info.get('user_id')
+        if not user_id:
+            abort(400, 'Missing user_id')
+        if not storage.get("User", user_id):
+            abort(404)
+        if not review_info.get('text'):
+            abort(400, 'Missing text')
+        review_info.update({"place_id": place_id, "user_id": user_id})
         review = Review(**review_info)
         storage.new(review)
         storage.save()
@@ -66,10 +86,13 @@ def put_a_review(id):
     if review:
         review_dict = review.to_dict()
         review_dict.update(review_info)
-        # filter out attrs
-        IGNORE = ['__class__', 'id', 'created_at', 'update_at']
-        review_dict = {k: v for k, v in review_dict.items() if k not in IGNORE}
-        # review = Review(**review_dict)
+        IGNORE = [
+                '__class__', 'id', 'user_id', 'place_id',
+                'created_at', 'updated_at',
+                ]
+        review_dict = {
+                k: v for k, v in review_dict.items() if k not in IGNORE
+                }
         for key, value in review_dict.items():
             setattr(review, key, value)
 
