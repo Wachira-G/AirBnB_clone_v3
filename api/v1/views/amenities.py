@@ -12,12 +12,14 @@ from werkzeug.exceptions import NotFound
 def get_amenities():
     """Retrieve Amenity objects."""
     amenities = storage.all("Amenity")
-    json_amenities = jsonify([amenity.to_dict() for amenity in amenities.values()])
+    json_amenities = jsonify([amenity.to_dict()
+                              for amenity in amenities.values()])
 
     return json_amenities, 200
 
 
-@app_views.route("/amenities/<string:id>", methods=["GET"], strict_slashes=False)
+@app_views.route(
+        "/amenities/<string:id>", methods=["GET"], strict_slashes=False)
 def get_a_amenity(id):
     """Retrieve a specific amenity object."""
     amenity = storage.get('Amenity', id)
@@ -56,7 +58,8 @@ def post_a_amenity():
     abort(400, 'Not a JSON')
 
 
-@app_views.route('/amenities/<string:id>', methods=['PUT'], strict_slashes=False)
+@app_views.route(
+        '/amenities/<string:id>', methods=['PUT'], strict_slashes=False)
 def put_a_amenity(id):
     """Update a amenity object."""
     amenity_info = request.get_json()
@@ -68,7 +71,8 @@ def put_a_amenity(id):
         amenity_dict.update(amenity_info)
         # filter out attrs
         IGNORE = ['__class__', 'id', 'created_at', 'update_at']
-        amenity_dict = {k: v for k, v in amenity_dict.items() if k not in IGNORE}
+        amenity_dict = {
+            k: v for k, v in amenity_dict.items() if k not in IGNORE}
         # amenity = Amenity(**amenity_dict)
         for key, value in amenity_dict.items():
             setattr(amenity, key, value)
