@@ -67,7 +67,7 @@ def put_a_state(id):
         state_dict = state.to_dict()
         state_dict.update(state_info)
         # filter out attrs
-        IGNORE = ['__class__', 'id', 'created_at', 'update_at']
+        IGNORE = ['__class__', 'id', 'created_at', 'updated_at']
         state_dict = {k: v for k, v in state_dict.items() if k not in IGNORE}
         # state = State(**state_dict)
         for key, value in state_dict.items():

@@ -8,11 +8,29 @@ from models.place import Place
 from werkzeug.exceptions import NotFound
 
 
-@app_views.route("/places", methods=["GET"], strict_slashes=False)
-def get_places():
+#@app_views.route("/places", methods=["GET"], strict_slashes=False)
+#def get_places():
+#    """Retrieve Place objects."""
+#    places = storage.all("Place")
+#    json_places = jsonify([place.to_dict() for place in places.values()])
+
+#    return json_places, 200
+
+
+@app_views.route(
+        "/cities/<string:city_id>/places",
+        methods=["GET"],
+        strict_slashes=False
+        )
+def get_places(city_id):
     """Retrieve Place objects."""
+    city = storage.get('City', city_id)
+    if not city:
+        abort(404)
     places = storage.all("Place")
-    json_places = jsonify([place.to_dict() for place in places.values()])
+    json_places = jsonify(
+            [place.to_dict() for place in places.values()
+                if place.city_id == city_id])
 
     return json_places, 200
 
@@ -42,13 +60,25 @@ def delete_a_place(id):
     abort(404)
 
 
-@app_views.route('/places/', methods=['POST'], strict_slashes=False)
-def post_a_place():
+@app_views.route(
+        '/cities/<string:city_id>/places/',
+        methods=['POST'], strict_slashes=False
+        )
+def post_a_place(city_id):
     """Create a place object."""
+    city = storage.get('City', city_id)
+    if not city:
+        abort(404)
     place_info = request.get_json()
     if place_info:
         if not place_info.get('name'):
             abort(400, 'Missing name')
+        if not place_info.get('user_id'):
+            abort(400, 'Missing user_id')
+        user = storage.get('User', place_info['user_id'])
+        if not user:
+            abort(404)
+        place_info.update({"city_id": city_id})
         place = Place(**place_info)
         storage.new(place)
         storage.save()
@@ -67,7 +97,10 @@ def put_a_place(id):
         place_dict = place.to_dict()
         place_dict.update(place_info)
         # filter out attrs
-        IGNORE = ['__class__', 'id', 'created_at', 'update_at']
+        IGNORE = [
+                '__class__', 'id', 'created_at',
+                'updated_at', 'user_id', 'city_id',
+                ]
         place_dict = {k: v for k, v in place_dict.items() if k not in IGNORE}
         # place = Place(**place_dict)
         for key, value in place_dict.items():

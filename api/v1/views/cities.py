@@ -79,7 +79,7 @@ def put_a_city(id):
         city_dict = city.to_dict()
         city_dict.update(city_info)
         # filter out attrs
-        IGNORE = ['__class__', 'id', 'created_at', 'update_at', 'state_id']
+        IGNORE = ['__class__', 'id', 'created_at', 'updated_at', 'state_id']
         city_dict = {k: v for k, v in city_dict.items() if k not in IGNORE}
         # city = City(**city_dict)
         for key, value in city_dict.items():

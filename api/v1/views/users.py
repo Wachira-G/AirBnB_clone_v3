@@ -67,7 +67,7 @@ def put_a_user(id):
         user_dict = user.to_dict()
         user_dict.update(user_info)
         # filter out attrs
-        IGNORE = ['__class__', 'id', 'created_at', 'update_at']
+        IGNORE = ['__class__', 'id', 'created_at', 'updated_at', 'email']
         user_dict = {k: v for k, v in user_dict.items() if k not in IGNORE}
         # user = User(**user_dict)
         for key, value in user_dict.items():

@@ -70,7 +70,7 @@ def put_a_amenity(id):
         amenity_dict = amenity.to_dict()
         amenity_dict.update(amenity_info)
         # filter out attrs
-        IGNORE = ['__class__', 'id', 'created_at', 'update_at']
+        IGNORE = ['__class__', 'id', 'created_at', 'updated_at']
         amenity_dict = {
             k: v for k, v in amenity_dict.items() if k not in IGNORE}
         # amenity = Amenity(**amenity_dict)
