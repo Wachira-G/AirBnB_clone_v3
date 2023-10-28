@@ -8,15 +8,6 @@ from models.place import Place
 from werkzeug.exceptions import NotFound
 
 
-#@app_views.route("/places", methods=["GET"], strict_slashes=False)
-#def get_places():
-#    """Retrieve Place objects."""
-#    places = storage.all("Place")
-#    json_places = jsonify([place.to_dict() for place in places.values()])
-
-#    return json_places, 200
-
-
 @app_views.route(
         "/cities/<string:city_id>/places",
         methods=["GET"],
