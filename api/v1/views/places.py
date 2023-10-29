@@ -102,3 +102,44 @@ def put_a_place(id):
         storage.save()
         return jsonify(place.to_dict()), 200
     abort(400, 'Not a JSON')
+
+
+@app_views.route('/places_search', methods=['POST'], strict_slashes=False)
+def search_places():
+    """Retrieves all Place objects depending on JSON in body of the request."""
+    info = request.get_json()
+
+    if info is None:
+        abort(400, 'Not a JSON')
+
+    amenities = set(info.get('amenities', []))
+    states = set(info.get('states', []))
+    cities = set(info.get('cities', []))
+
+    all_places = storage.all("Place").values()
+
+    if not info or (not states and not cities and not amenities):
+        return jsonify([place.to_dict() for place in all_places]), 200
+
+    places = set()
+
+    for state_id in states:
+        state_cities = storage.all("City").values()
+        state_cites = [city.id for city in state_cities if city.id == state_id]
+        for city_id in state_cities:
+            for place in all_places:
+                if place.city_id == city_id:
+                    places.add(place)
+    for city_id in cities:
+        for place in all_places:
+            if place.city_id == city_id:
+                places.add(place)
+
+    # filter amenities
+    filtered_places = []
+    for place in places:
+        if storage == 'db':
+            place_amenities = {amenity.id for amenity in place.amenities}
+            if amenities.issubset(place_amenities):
+                filtered_places.append(place.to_dict())
+    return jsonify(filtered_places), 200
