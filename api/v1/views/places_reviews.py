@@ -14,7 +14,7 @@ from werkzeug.exceptions import NotFound
 def get_reviews(place_id):
     """Retrieve Review objects of a place."""
     place = storage.get('Place', place_id)
-    if not place:
+    if place is None:
         abort(404)
     reviews = storage.all("Review")
     json_reviews = jsonify([
@@ -29,10 +29,11 @@ def get_reviews(place_id):
 def get_a_review(review_id):
     """Retrieve a specific review object."""
     review = storage.get('Review', review_id)
+    if review is None:
+        abort(404)
     if review:
         json_review = jsonify(review.to_dict())
         return json_review, 200
-    abort(404)
 
 
 @app_views.route(
@@ -43,11 +44,12 @@ def get_a_review(review_id):
 def delete_a_review(review_id):
     """Delete a specific review object."""
     review = storage.get('Review', review_id)
+    if review is None:
+        abort(404)
     if review:
         review.delete()
         storage.save()
         return {}, 200
-    abort(404)
 
 
 @app_views.route(
@@ -57,14 +59,16 @@ def delete_a_review(review_id):
 def post_a_review(place_id):
     """Create a review object."""
     place = storage.get("Place", place_id)
-    if not place:
+    if place is None:
         abort(404)
     review_info = request.get_json()
+    if review_info is None:
+        abort(400, 'Not a JSON')
     if review_info:
         user_id = review_info.get('user_id')
         if not user_id:
             abort(400, 'Missing user_id')
-        if not storage.get("User", user_id):
+        if storage.get("User", user_id) is None:
             abort(404)
         if not review_info.get('text'):
             abort(400, 'Missing text')
@@ -73,16 +77,17 @@ def post_a_review(place_id):
         storage.new(review)
         storage.save()
         return jsonify(review.to_dict()), 201
-    abort(400, 'Not a JSON')
 
 
 @app_views.route('/reviews/<string:id>', methods=['PUT'], strict_slashes=False)
 def put_a_review(id):
     """Update a review object."""
-    review_info = request.get_json()
-    if not review_info:
-        abort(404)
     review = storage.get('Review', id)
+    if review is None:
+        abort(404)
+    review_info = request.get_json()
+    if review_info is None:
+        abort(400, 'Not a JSON')
     if review:
         review_dict = review.to_dict()
         review_dict.update(review_info)
@@ -100,4 +105,3 @@ def put_a_review(id):
         storage.new(review)
         storage.save()
         return jsonify(review.to_dict()), 200
-    abort(400, 'Not a JSON')
