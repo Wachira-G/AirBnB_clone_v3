@@ -57,6 +57,8 @@ def post_a_city(state_id):
         abort(404)
 
     city_info = request.get_json()
+    if city_info is None:
+        abort(400, 'Not a JSON')
     if city_info:
         if not city_info.get('name'):
             abort(400, 'Missing name')
@@ -65,16 +67,17 @@ def post_a_city(state_id):
         storage.new(city)
         storage.save()
         return jsonify(city.to_dict()), 201
-    abort(400, 'Not a JSON')
 
 
 @app_views.route('/cities/<string:id>', methods=['PUT'], strict_slashes=False)
 def put_a_city(id):
     """Update a city object."""
-    city_info = request.get_json()
-    if not city_info:
-        abort(404)
     city = storage.get('City', id)
+    if city is None:
+        abort(404)
+    city_info = request.get_json()
+    if city_info is None:
+        abort(400, 'Not a JSON')
     if city:
         city_dict = city.to_dict()
         city_dict.update(city_info)
@@ -89,4 +92,3 @@ def put_a_city(id):
         storage.new(city)
         storage.save()
         return jsonify(city.to_dict()), 200
-    abort(400, 'Not a JSON')
