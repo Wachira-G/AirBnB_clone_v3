@@ -16,7 +16,7 @@ from werkzeug.exceptions import NotFound
 def get_places(city_id):
     """Retrieve Place objects."""
     city = storage.get('City', city_id)
-    if not city:
+    if city is None:
         abort(404)
     places = storage.all("Place")
     json_places = jsonify(
@@ -30,10 +30,11 @@ def get_places(city_id):
 def get_a_place(id):
     """Retrieve a specific place object."""
     place = storage.get('Place', id)
+    if place is None:
+        abort(404)
     if place:
         json_place = jsonify(place.to_dict())
         return json_place, 200
-    abort(404)
 
 
 @app_views.route(
@@ -44,11 +45,12 @@ def get_a_place(id):
 def delete_a_place(id):
     """Delete a specific place object."""
     place = storage.get('Place', id)
+    if place is None:
+        abort(404)
     if place:
         place.delete()
         storage.save()
         return {}, 200
-    abort(404)
 
 
 @app_views.route(
@@ -58,32 +60,35 @@ def delete_a_place(id):
 def post_a_place(city_id):
     """Create a place object."""
     city = storage.get('City', city_id)
-    if not city:
+    if city is None:
         abort(404)
     place_info = request.get_json()
+    if place_info is None:
+        abort(400, 'Not a JSON')
     if place_info:
-        if not place_info.get('name'):
-            abort(400, 'Missing name')
         if not place_info.get('user_id'):
             abort(400, 'Missing user_id')
         user = storage.get('User', place_info['user_id'])
-        if not user:
+        if user is None:
             abort(404)
+        if not place_info.get('name'):
+            abort(400, 'Missing name')
         place_info.update({"city_id": city_id})
         place = Place(**place_info)
         storage.new(place)
         storage.save()
         return jsonify(place.to_dict()), 201
-    abort(400, 'Not a JSON')
 
 
 @app_views.route('/places/<string:id>', methods=['PUT'], strict_slashes=False)
 def put_a_place(id):
     """Update a place object."""
-    place_info = request.get_json()
-    if not place_info:
-        abort(404)
     place = storage.get('Place', id)
+    if place is None:
+        abort(404)
+    place_info = request.get_json()
+    if place_info is None:
+        abort(400, 'Not a JSON')
     if place:
         place_dict = place.to_dict()
         place_dict.update(place_info)
@@ -101,7 +106,6 @@ def put_a_place(id):
         storage.new(place)
         storage.save()
         return jsonify(place.to_dict()), 200
-    abort(400, 'Not a JSON')
 
 
 @app_views.route('/places_search', methods=['POST'], strict_slashes=False)
