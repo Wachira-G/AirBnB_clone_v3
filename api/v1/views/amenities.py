@@ -23,10 +23,11 @@ def get_amenities():
 def get_a_amenity(id):
     """Retrieve a specific amenity object."""
     amenity = storage.get('Amenity', id)
+    if amenity is None:
+        abort(404)
     if amenity:
         json_amenity = jsonify(amenity.to_dict())
         return json_amenity, 200
-    abort(404)
 
 
 @app_views.route(
@@ -37,17 +38,20 @@ def get_a_amenity(id):
 def delete_a_amenity(id):
     """Delete a specific amenity object."""
     amenity = storage.get('Amenity', id)
+    if amenity is None:
+        abort(404)
     if amenity:
         amenity.delete()
         storage.save()
         return {}, 200
-    abort(404)
 
 
 @app_views.route('/amenities', methods=['POST'], strict_slashes=False)
 def post_a_amenity():
     """Create a amenity object."""
     amenity_info = request.get_json()
+    if amenity_info is None:
+        abort(400, 'Not a JSON')
     if amenity_info:
         if not amenity_info.get('name'):
             abort(400, 'Missing name')
@@ -55,25 +59,26 @@ def post_a_amenity():
         storage.new(amenity)
         storage.save()
         return jsonify(amenity.to_dict()), 201
-    abort(400, 'Not a JSON')
 
 
 @app_views.route(
         '/amenities/<string:id>', methods=['PUT'], strict_slashes=False)
 def put_a_amenity(id):
     """Update a amenity object."""
-    amenity_info = request.get_json()
-    if not amenity_info:
-        abort(404)
     amenity = storage.get('Amenity', id)
+    if amenity is None:
+        abort(404)
+    amenity_info = request.get_json()
+    if amenity_info is None:
+        abort(400, 'Not a JSON')
     if amenity:
         amenity_dict = amenity.to_dict()
         amenity_dict.update(amenity_info)
         # filter out attrs
         IGNORE = ['__class__', 'id', 'created_at', 'updated_at']
         amenity_dict = {
-            k: v for k, v in amenity_dict.items() if k not in IGNORE}
-        # amenity = Amenity(**amenity_dict)
+            k: v for k, v in amenity_dict.items() if k not in IGNORE
+            }
         for key, value in amenity_dict.items():
             setattr(amenity, key, value)
 
@@ -81,4 +86,3 @@ def put_a_amenity(id):
         storage.new(amenity)
         storage.save()
         return jsonify(amenity.to_dict()), 200
-    abort(400, 'Not a JSON')
