@@ -30,6 +30,7 @@ class User(BaseModel, Base):
         if "password" in kwargs:
             text_password = kwargs.pop("password")  # Remove from kwargs
             hashed_password = hashlib.md5(text_password.encode()).hexdigest()
-            super().__init__(*args, **kwargs, password=hashed_password)
+            super().__init__(*args, **kwargs
+            self.password = password=hashed_password
         else:
             super().__init__(*args, **kwargs)
