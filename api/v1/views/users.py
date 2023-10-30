@@ -21,10 +21,11 @@ def get_users():
 def get_a_user(id):
     """Retrieve a specific user object."""
     user = storage.get('User', id)
+    if user is None:
+        abort(404)
     if user:
         json_user = jsonify(user.to_dict())
         return json_user, 200
-    abort(404)
 
 
 @app_views.route(
@@ -35,34 +36,40 @@ def get_a_user(id):
 def delete_a_user(id):
     """Delete a specific user object."""
     user = storage.get('User', id)
+    if user is None:
+        abort(404)
     if user:
         user.delete()
         storage.save()
         return {}, 200
-    abort(404)
 
 
-@app_views.route('/users/', methods=['POST'], strict_slashes=False)
+@app_views.route('/users', methods=['POST'], strict_slashes=False)
 def post_a_user():
     """Create a user object."""
     user_info = request.get_json()
+    if user_info is None:
+        abort(400, 'Not a JSON')
     if user_info:
-        if not user_info.get('name'):
-            abort(400, 'Missing name')
+        if not user_info.get('email'):
+            abort(400, 'Missing email')
+        if not user_info.get('password'):
+            abort(400, 'Missing password')
         user = User(**user_info)
         storage.new(user)
         storage.save()
         return jsonify(user.to_dict()), 201
-    abort(400, 'Not a JSON')
 
 
 @app_views.route('/users/<string:id>', methods=['PUT'], strict_slashes=False)
 def put_a_user(id):
     """Update a user object."""
-    user_info = request.get_json()
-    if not user_info:
-        abort(404)
     user = storage.get('User', id)
+    if user is None:
+        abort(404)
+    user_info = request.get_json()
+    if user_info is None:
+        abort(400, 'Not a JSON')
     if user:
         user_dict = user.to_dict()
         user_dict.update(user_info)
@@ -77,4 +84,3 @@ def put_a_user(id):
         storage.new(user)
         storage.save()
         return jsonify(user.to_dict()), 200
-    abort(400, 'Not a JSON')
