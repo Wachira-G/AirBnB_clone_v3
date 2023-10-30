@@ -60,10 +60,12 @@ def post_a_state():
 @app_views.route('/states/<string:id>', methods=['PUT'], strict_slashes=False)
 def put_a_state(id):
     """Update a State object."""
+    state = storage.get('State', id)
+    if state is None:
+        abort(404)
     state_info = request.get_json()
     if state_info is None:
         abort(400, 'Not a JSON')
-    state = storage.get('State', id)
     if state:
         state_dict = state.to_dict()
         state_dict.update(state_info)
