@@ -113,3 +113,18 @@ class TestFileStorage(unittest.TestCase):
         with open("file.json", "r") as f:
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
+
+    def test_dbs_get(self):
+        """Test for the get method of db storage."""
+        # state = State({'name': 'new_state'})
+        # models.storage.new(state)
+        # models.storage.save()
+        # self.assertTrue(
+        #         state == models.storage.get('State', state.id),
+        #         'get not working')
+        pass
+
+    def test_dbs_count(self):
+        """Test for count of various objects."""
+        count = models.storage.count()
+        pass
